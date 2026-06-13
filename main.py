@@ -16,11 +16,12 @@ class QuizGenerateRequest(BaseModel):
     quiz_count: int = 5
 
 
+class AskRequest(BaseModel):
+    question: str
+    manual_text: str
+
+
 def parse_json_safely(value):
-    """
-    OpenAI 응답이 문자열 JSON으로 올 때 실제 JSON으로 변환하기 위한 함수.
-    변환 실패 시 raw 문자열 그대로 반환.
-    """
     if isinstance(value, (dict, list)):
         return value
 
@@ -46,11 +47,9 @@ async def analyze(file: UploadFile = File(...)):
     file_path = f"temp_{file.filename}"
 
     try:
-        # 1. 파일 저장
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # 2. 텍스트 추출
         text = extract_text(file_path, file.filename)
 
         if not text or len(text.strip()) == 0:
@@ -59,16 +58,10 @@ async def analyze(file: UploadFile = File(...)):
                 "error": "텍스트를 추출할 수 없습니다."
             }
 
-        # 3. 길이 제한
         text = text[:3000]
 
-        # 4. 요약 생성
         summary = summarize(text)
-
-        # 5. 카드형 학습 콘텐츠 생성
         content = generate_content(summary)
-
-        # 6. 퀴즈 생성
         quiz = generate_quiz(summary)
 
         return {
@@ -91,9 +84,55 @@ async def analyze(file: UploadFile = File(...)):
         }
 
     finally:
-        # 7. 임시 파일 삭제
         if os.path.exists(file_path):
             os.remove(file_path)
+
+
+@app.post("/ask")
+def ask(req: AskRequest):
+    try:
+        from openai import OpenAI
+        from dotenv import load_dotenv
+        load_dotenv()
+
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+        prompt = f"""
+다음 매장 매뉴얼을 기반으로 알바생의 질문에 답변해라.
+
+매뉴얼 내용:
+{req.manual_text[:2000]}
+
+알바생 질문: {req.question}
+
+조건:
+- 매뉴얼에 있는 내용이면 친절하게 답변해라.
+- 매뉴얼에 없는 내용이면 "죄송해요, 매뉴얼에 없는 내용이에요. 사장님께 직접 여쭤보세요!" 라고 답변해라.
+- 답변은 짧고 명확하게 해라.
+"""
+
+        res = client.chat.completions.create(
+            model="gpt-4.1-mini",
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        answer = res.choices[0].message.content
+
+        actions = []
+        if "사장님께 직접" in answer or "매뉴얼에 없는" in answer:
+            actions.append("post_board")
+
+        return {
+            "success": True,
+            "answer": answer,
+            "actions": actions
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"답변 생성 중 오류 발생: {str(e)}"
+        }
 
 
 @app.post("/quiz/generate")
