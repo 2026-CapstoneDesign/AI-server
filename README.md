@@ -1,6 +1,8 @@
-# 🤖 AI 기반 아르바이트 교육 서비스 (AI Server)
+# AI 기반 아르바이트 교육 서비스 (AI Server)
 
-## 📌 프로젝트 소개
+## 프로젝트 소개
+<img width="7680" height="3840" alt="Group 149" src="https://github.com/user-attachments/assets/337c6011-c353-49e5-b843-ebaa1565bf19" />
+프로젝트 'E:ON(이어온)'은 AI 기반 아르바이트 교육 및 매뉴얼 학습 플랫폼입니다.
 
 AI Server는 교육 매뉴얼을 분석하여 학습 콘텐츠를 자동 생성하는 역할을 수행합니다.
 
