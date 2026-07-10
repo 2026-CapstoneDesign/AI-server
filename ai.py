@@ -28,7 +28,7 @@ def summarize(text):
 
     return res.choices[0].message.content
 
-# ai.py 내부의 관련 답변 생성 함수 수정 예시
+
 def ask_chatbot(question, manual_text):
     prompt = f"""
 너는 매장의 친절하지만 아주 명쾌하고 깔끔한 베테랑 매니저야.
