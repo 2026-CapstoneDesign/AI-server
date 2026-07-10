@@ -43,6 +43,13 @@ def ask_chatbot(question, manual_text):
 - "동전통 아래 보관된 곳에서 상품권을 확인한 후 입력하시면 됩니다."
 - "유니폼으로 환복 후 포스기 인수인계 버튼을 가장 먼저 눌러야 합니다."
 
+★ 가장 중요한 규칙
+- 반드시 제공된 매뉴얼 내용만 근거로 답변한다.
+- 매뉴얼에서 답을 찾을 수 없으면 절대로 추측하지 않는다.
+- 매뉴얼에 없는 질문이라면 아래 문장만 그대로 출력한다.
+
+"죄송합니다. 해당 내용은 현재 매뉴얼에서 확인할 수 없습니다."
+
 [매뉴얼 원문]:
 {manual_text}
 
@@ -54,4 +61,9 @@ def ask_chatbot(question, manual_text):
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}]
     )
-    return res.choices[0].message.content
+    answer = res.choices[0].message.content.strip()
+
+    return {
+        "answered": answer != "죄송합니다. 해당 내용은 현재 매뉴얼에서 확인할 수 없습니다.",
+        "answer": answer
+    }
